@@ -1,0 +1,94 @@
+<div #parent
+     [style.width]="width"
+     [style.height]="height"
+     class="drawing-area m-2"
+     (mousedown)="startDrawing($event)"
+     (mousemove)="drawingRect($event)"
+     (mouseup)="endDrawing($event)"
+>
+  @for(rect of rectangles;track rect){
+    <div
+      class="rectangle"
+      [class.selected]="rect.id === selectedRectId"
+      [style.left.px]="rect.x"
+      [style.top.px]="rect.y"
+      [style.width.px]="rect.width"
+      [style.height.px]="rect.height"
+      (mousedown)="selectRectangle($event, rect)">
+
+      @for(handle of resizeHandles; track handle){
+        <div class="resize-handle"
+             [class]="handle"
+             (mousedown)="startResizing($event, rect, handle)">
+        </div>
+      }
+    </div>
+  }
+
+</div>
+<div class="m-2">
+  <button class="" nz-button (click)="deleteSelected()" [disabled]="(selectedRectId===null)">删除选中矩形</button>
+  <button class="mx-2" nz-button (click)="clearSelectMode()" [disabled]="(selectedRectId===null)">清除选中状态</button>
+  <h5 class="">debug viewer</h5>
+  <div>
+    <table class="table-bordered table table-sm">
+      <thead>
+      <tr>
+        <td>属性</td>
+        <td>值</td>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>startX</td>
+        <td>{{getStartSizeX()}}</td>
+
+      </tr>
+      <tr>
+        <td>startY</td>
+        <td>{{getStartSizeY()}}</td>
+      </tr>
+      </tbody>
+      <tr>
+        <td>mouseX</td>
+        <td>{{viewMouseX}}</td>
+
+      </tr>
+      <tr>
+        <td>mouseY</td>
+        <td>{{viewMouseY}}</td>
+
+      </tr>
+    </table>
+  </div>
+  <div class="">
+    被选中Id: {{selectedRectId}}
+  </div>
+  <app-scroll-viewer [height]="'300px'" [width]="'100%'">
+    <table class="table table-bordered">
+      <thead>
+      <tr>
+        <td>索引</td>
+        <td>id</td>
+        <td>宽度</td>
+        <td>高度</td>
+        <td>x</td>
+        <td>y</td>
+      </tr>
+      </thead>
+      <tbody>
+        @for(rect of rectangles;track rect){
+          <tr [class.rect-selected]="selectedRectId===rect.id">
+            <td>{{$index}}</td>
+            <td>{{rect.id}}</td>
+            <td>{{rect.width}}</td>
+            <td>{{rect.height}}</td>
+            <td>{{rect.x}}</td>
+            <td>{{rect.y}}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </app-scroll-viewer>
+
+</div>

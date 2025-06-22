@@ -1,0 +1,318 @@
+import {Component, ElementRef, HostListener, Input, ViewChild} from '@angular/core';
+import {NzButtonComponent} from 'ng-zorro-antd/button';
+import {ScrollViewer} from '../../ui';
+import {Rectangle, ResizeHandle} from '../../components/rectangle-drawer/rectangle';
+
+@Component({
+  selector: 'app-rectangle-drawer-test',
+  templateUrl: './rectangle-drawer.html',
+  imports: [
+    NzButtonComponent,
+    ScrollViewer
+  ],
+  styleUrls: ['./rectangle-drawer.css']
+})
+export class RectangleDrawerTestComponent {
+  rectangles: Rectangle[] = [];
+  selectedRectId: number | null = null;
+
+  @Input()
+  width: string = '800px';
+  @Input()
+  height: string = '600px';
+  private drawing = false;
+  private startX = 0;
+  private startY = 0;
+
+  private resizing = false;
+  private resizeRect: Rectangle | null = null;
+  private resizeHandle: ResizeHandle | null = null;
+
+  private moving = false;
+  private moveStartX = 0;
+  private moveStartY = 0;
+  private moveRectStartX = 0;
+  private moveRectStartY = 0;
+  public viewMouseX = 0;
+  public viewMouseY = 0;
+  public getStartSizeX(): number {
+    return this.startX;
+  }
+  public getStartSizeY(): number {
+    return this.startY;
+  }
+  resizeHandles: ResizeHandle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+
+  // 鼠标按下开始绘制矩形
+  startDrawing(event: MouseEvent) {
+    if (this.selectedRectId !== null){
+      this.selectedRectId = null;
+      return;
+    }// 选中状态下不绘制新矩形
+    this.drawing = true;
+    this.startX = event.clientX;// 起始点
+    this.startY = event.clientY;
+  }
+
+  // 鼠标移动更新矩形大小
+  drawingRect(event: MouseEvent) {
+    if (!this.drawing){
+      return;
+    }
+    const currentX = event.clientX;// 移动过程中的矩形终点x
+    const currentY = event.clientY;
+    let x = Math.min(this.startX, currentX);// 较小的x作为实际举行的x
+    let y = Math.min(this.startY, currentY);
+    let width = Math.abs(currentX - this.startX);
+    let height = Math.abs(currentY - this.startY);
+
+    // 临时绘制一个矩形（放在最后）
+    let tmpRect: Rectangle = {
+      id: -1,
+      x, y,
+      width,
+      height };
+    if (this.rectangles.length && this.rectangles[this.rectangles.length - 1].id === -1) {
+      this.rectangles[this.rectangles.length - 1] = tmpRect;
+    } else {
+      this.rectangles.push(tmpRect);
+    }
+  }
+
+  // 鼠标松开结束绘制
+  endDrawing(event: MouseEvent) {
+    if (!this.drawing) return;
+    this.drawing = false;
+
+    // 移除临时矩形
+    const tempIndex = this.rectangles.findIndex(r => r.id === -1);
+    if (tempIndex === -1) return;
+
+    const tempRect = this.rectangles[tempIndex];
+    if (tempRect.width < 5 || tempRect.height < 5) {
+      // 太小不保存
+      this.rectangles.splice(tempIndex, 1);
+      return;
+    }
+
+    // 赋予正式id
+    const newRect: Rectangle = {
+      id: this.generateId(),
+      x: tempRect.x,
+      y: tempRect.y,
+      width: tempRect.width,
+      height: tempRect.height
+    };
+
+    this.rectangles.splice(tempIndex, 1, newRect);
+  }
+
+  // 生成唯一id
+  private generateId(): number {
+    return this.rectangles.length ? Math.max(...this.rectangles.map(r => r.id)) + 1 : 1;
+  }
+
+  // 选中矩形
+  selectRectangle(event: MouseEvent, rect: Rectangle) {
+    event.stopPropagation(); // 防止触发绘制
+    this.selectedRectId = rect.id;
+
+    // 开始移动矩形
+    this.moving = true;
+    this.moveStartX = event.clientX;
+    this.moveStartY = event.clientY;
+    this.moveRectStartX = rect.x;
+    this.moveRectStartY = rect.y;
+  }
+  @ViewChild('parent')
+  parentCanvas: ElementRef| undefined = undefined;
+  // 监听全局鼠标移动处理移动和缩放
+  @HostListener('window:mousemove', ['$event'])
+  onMouseMove(event: MouseEvent) {
+    if (this.moving && this.selectedRectId !== null) {
+      const dx = event.clientX - this.moveStartX;
+      const dy = event.clientY - this.moveStartY;
+
+      const rect = this.rectangles.find(r => r.id === this.selectedRectId);
+      if (!rect) return;
+
+      rect.x = this.moveRectStartX + dx;
+      rect.y = this.moveRectStartY + dy;
+      const parentElement = this.parentCanvas!.nativeElement as HTMLElement;
+      if(rect.width>=parentElement.clientWidth ){
+        rect.width = parentElement.clientWidth;
+      }
+      if(rect.height>=parentElement.clientHeight ){
+        rect.height = parentElement.clientHeight;
+      }
+      // 限制不能移出绘图区（假设绘图区左上角是0,0）
+      rect.x = Math.max(0, rect.x);
+      rect.y = Math.max(0, rect.y);
+      if(rect.x>= parentElement.offsetWidth-rect.width){
+        rect.x = parentElement.offsetWidth-rect.width;
+      }
+      if(rect.y >= parentElement.offsetHeight-rect.height){
+        rect.y = parentElement.offsetHeight - rect.height;
+      }
+    }
+
+    if (this.resizing && this.resizeRect && this.resizeHandle) {
+      this.resizeRectangle(event);
+    }
+  }
+
+  // 监听全局鼠标松开结束移动和缩放
+  @HostListener('window:mouseup', ['$event'])
+  onMouseUp(event: MouseEvent) {
+    this.moving = false;
+    this.resizing = false;
+    this.resizeRect = null;
+    this.resizeHandle = null;
+  }
+
+  // 开始调整大小
+  startResizing(event: MouseEvent, rect: Rectangle, handle: ResizeHandle) {
+    event.stopPropagation();
+    this.resizing = true;
+    this.resizeRect = rect;
+    this.resizeHandle = handle;
+  }
+  private miniX: number = 5;
+  private miniY: number = 5;
+  // 根据handle调整矩形大小
+  private resizeRectangle(event: MouseEvent) {
+    if (!this.resizeRect || !this.resizeHandle) return;
+    const parentElement = this.parentCanvas!.nativeElement as HTMLElement;
+
+    const rect = this.resizeRect;
+    let mouseX = event.clientX;
+    let mouseY = event.clientY;
+    let mx = parentElement.offsetWidth;
+    let my = parentElement.offsetHeight;
+
+    if(mouseX>=mx){
+      mouseX = Math.min(mouseX, mx);
+    }
+    if(mouseY>=my){
+      mouseY = Math.min(mouseY, my);
+    }
+    if(mouseX<=0){
+      mouseX = Math.max(mouseX, 0);
+    }
+    if(mouseY<=0){
+      mouseY = Math.max(mouseY, 0);
+    }
+    let handleResult = this.handleLimits(mouseX, mouseY,mx,my);
+    mouseX = handleResult[0];// 优化输入
+    mouseY = handleResult[1];
+    this.viewMouseX = mouseX;
+    this.viewMouseY = mouseY;
+
+    let x = rect.x;
+    let y = rect.y;
+    let w = rect.width;
+    let h = rect.height;
+
+    switch (this.resizeHandle) {
+      case 'n':// north
+        h += y - mouseY;
+        y = mouseY;
+        break;
+      case 'ne'://north east
+        w = mouseX - x;
+        h += y - mouseY;
+        y = mouseY;
+        break;
+      case 'e'://east
+        w = mouseX - x;
+        break;
+      case 'se'://south east
+        w = mouseX - x;
+        h = mouseY - y;
+        break;
+      case 's'://south
+        h = mouseY - y;
+        break;
+      case 'sw'://south west
+        w += x - mouseX;
+        x = mouseX;
+        h = mouseY - y;
+        break;
+      case 'w'://west
+        w += x - mouseX;
+        x = mouseX;
+        break;
+      case 'nw'://north west
+        w += x - mouseX;
+        x = mouseX;
+        h += y - mouseY;
+        y = mouseY;
+        break;
+    }
+
+    // 限制最小宽高
+    if (w < this.miniX) w = this.miniX;
+    if (h < this.miniY) h = this.miniY;
+
+    // 限制不能超出绘图区
+    if (x < 0) x = 0;
+    if (y < 0) y = 0;
+
+    if(x>= mx-w){
+      x = mx-w;
+    }
+    if(y >= my-h){
+      y =my - h;
+    }
+
+    rect.x = x;
+    rect.y = y;
+    rect.width = w;
+    rect.height = h;
+
+  }
+
+  // 删除选中矩形
+  deleteSelected() {
+    if (this.selectedRectId === null) return;
+    this.rectangles = this.rectangles.filter(r => r.id !== this.selectedRectId);
+    this.selectedRectId = null;
+  }
+  clearSelectMode(){
+    this.selectedRectId = null;
+  }
+
+  private handleLimits(mouseX: number, mouseY: number,mx:number,my: number) {
+    switch (this.resizeHandle) {
+      case 'n':// north
+        mouseY = Math.max(0, mouseY);
+        break;
+      case 'ne'://north east
+        mouseX = Math.min(mx, mouseX);
+        mouseY = Math.max(0, mouseY);
+        break;
+      case 'e'://east
+        mouseX = Math.min(mx, mouseX);
+        break;
+      case 'se'://south east
+        mouseX = Math.min(mx, mouseX);
+        mouseY = Math.min(my, mouseY);
+        break;
+      case 's'://south
+        mouseY = Math.min(my, mouseY);
+        break;
+      case 'sw'://south west
+        mouseX = Math.max(0, mouseX);
+        mouseY = Math.max(0, mouseY);
+        break;
+      case 'w'://west
+        mouseX = Math.max(0, mouseX);
+        break;
+      case 'nw'://north west
+        mouseX = Math.max(0, mouseX);
+        mouseY = Math.max(0, mouseY);
+        break;
+    }
+    return [mouseX, mouseY];
+  }
+}

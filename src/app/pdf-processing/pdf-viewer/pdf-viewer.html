@@ -1,9 +1,36 @@
 <nz-card>
-  <ngx-extended-pdf-viewer
-    class="w-100 h-100"
-    [(src)]='pdfSrc'
-    [enableDragAndDrop]="true"
-  >
+  <div class="d-flex flex-row">
+    <div style="width: 900px">
+      <ngx-extended-pdf-viewer
+        [(src)]='pdfSrc'
+        [enableDragAndDrop]="true"
+        [height]="'900px'"
+        [showToolbar]="false"
+        [spread]="spreadMode"
+        [(page)]="page"
+        [zoom]="zoom"
+        class=""
+        pageViewMode="single"
 
-  </ngx-extended-pdf-viewer>
+      >
+      </ngx-extended-pdf-viewer>
+
+    </div>
+    <div class="p-2">
+      <div>
+        <nz-input-number class="mx-2" [(ngModel)]="pageInput">
+
+        </nz-input-number>
+        <button nz-button (click)="scrollTo()">
+          跳转
+        </button>
+      </div>
+      <div class="my-2 d-flex flex-row">
+        <input nz-input type="text" class="mx-2" [(ngModel)]="zoomInput"/>
+        <button nz-button (click)="zoomTo()">
+          放缩
+        </button>
+      </div>
+    </div>
+  </div>
 </nz-card>
