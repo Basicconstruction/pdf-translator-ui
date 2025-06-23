@@ -9,7 +9,7 @@ const routes: Routes = [
   },
   {
     path: 'home',
-    loadComponent: ()=> import("./pdf-viewer/pdf-viewer").then(c=>c.PdfViewer)
+    loadComponent: ()=> import("./pdf-view-test/pdf-view-test").then(c=>c.PdfViewTest),
 
   }
 ];

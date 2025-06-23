@@ -1,20 +1,37 @@
 <nz-card>
   <div class="d-flex flex-row">
-    <div style="width: 900px">
+    <div [style.width.px]="width" style="position: relative">
       <ngx-extended-pdf-viewer
+        #pdf_container
         [(src)]='pdfSrc'
         [enableDragAndDrop]="true"
-        [height]="'900px'"
+        [height]="height+'px'"
         [showToolbar]="false"
         [spread]="spreadMode"
         [(page)]="page"
         [zoom]="zoom"
         class=""
         pageViewMode="single"
+        style="opacity: 0.5;z-index: 1000"
 
       >
       </ngx-extended-pdf-viewer>
+      <div class="overlay-component" style="
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      /*pointer-events: none; !* 如果需要点击穿透PDF *!*/
+      /*display: flex;*/
+      /*justify-content: center;*/
+      /*align-items: center;*/
+      z-index: 2000;
+      ">
+        <app-rectangle-drawer>
 
+        </app-rectangle-drawer>
+      </div>
     </div>
     <div class="p-2">
       <div>
@@ -31,6 +48,10 @@
           放缩
         </button>
       </div>
+      <button nz-button (click)="tackle()">处理</button>
     </div>
   </div>
+<!--  <textarea [(ngModel)]="outRes" class="w-100" style="height: 400px">-->
+
+<!--  </textarea>-->
 </nz-card>

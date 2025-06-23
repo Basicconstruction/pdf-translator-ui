@@ -11,10 +11,11 @@ import { PdfViewer } from './pdf-processing/pdf-viewer/pdf-viewer';
     App,
     PdfProcessing,
   ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule
-  ],
+    imports: [
+        BrowserModule,
+        AppRoutingModule,
+        PdfViewer
+    ],
   providers: [
     provideBrowserGlobalErrorListeners()
   ],

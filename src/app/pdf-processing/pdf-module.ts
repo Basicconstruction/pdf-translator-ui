@@ -4,7 +4,8 @@ import {PdfRoutingModule} from './pdf-routing-module';
 import {PdfProcessing} from './pdf-processing';
 
 @NgModule({
-  declarations: [],
+  declarations: [
+  ],
   imports: [
     CommonModule,
     PdfRoutingModule,

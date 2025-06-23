@@ -4,7 +4,7 @@ import {ScrollViewer} from '../../ui';
 import {Rectangle, ResizeHandle} from '../../components/rectangle-drawer/rectangle';
 
 @Component({
-  selector: 'app-rectangle-drawer-test',
+  selector: 'app-rectangle-drawer',
   templateUrl: './rectangle-drawer.html',
   imports: [
     NzButtonComponent,
@@ -12,7 +12,7 @@ import {Rectangle, ResizeHandle} from '../../components/rectangle-drawer/rectang
   ],
   styleUrls: ['./rectangle-drawer.css']
 })
-export class RectangleDrawerTestComponent {
+export class RectangleDrawerComponent {
   rectangles: Rectangle[] = [];
   selectedRectId: number | null = null;
 
