@@ -9,13 +9,18 @@ const routes: Routes = [
   },
   {
     path: 'pdf',
-    loadChildren: () => import("./pdf-processing/pdf-module")
+    loadChildren: () => import("../pdf-processing/pdf-module")
       .then(c => c.PdfModule),
   },
   {
     path: 'draw',
-    loadChildren: () => import("./draw/draw.module")
+    loadChildren: () => import("../draw/draw.module")
       .then(m=>m.DrawModule)
+  },
+  {
+    path: 'plane-position',
+    loadChildren: () => import("../components/plane-position/plane-module")
+      .then(m=>m.PlaneModule)
   }
   ];
 

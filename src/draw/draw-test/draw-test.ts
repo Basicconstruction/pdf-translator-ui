@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
-import {RectangleDrawerTestComponent} from '../../../test-components/rectangle-drawer/rectangle-drawer';
+import {RectangleDrawerComponent} from '../../components/rectangle-drawer/rectangle-drawer';
 
 @Component({
   selector: 'app-draw-test',
   standalone: true,
   templateUrl: './draw-test.html',
   imports: [
-    RectangleDrawerTestComponent
+    RectangleDrawerComponent
   ],
   styleUrl: './draw-test.css'
 })

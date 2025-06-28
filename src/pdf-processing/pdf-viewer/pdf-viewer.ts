@@ -5,8 +5,8 @@ import {NzInputNumberComponent} from 'ng-zorro-antd/input-number';
 import {NzButtonComponent} from 'ng-zorro-antd/button';
 import {FormsModule} from '@angular/forms';
 import {NzInputDirective} from 'ng-zorro-antd/input';
-import {RectangleDrawerTestComponent} from '../../../test-components/rectangle-drawer/rectangle-drawer';
-import {RectangleDrawerComponent} from '../../../components/rectangle-drawer/rectangle-drawer';
+import {RectangleDrawerComponent} from '../../components/rectangle-drawer/rectangle-drawer';
+import {RectangleDrawerTestComponent} from '../../test-components/rectangle-drawer/rectangle-drawer';
 
 @Component({
   selector: 'app-pdf-viewer',
@@ -19,7 +19,6 @@ import {RectangleDrawerComponent} from '../../../components/rectangle-drawer/rec
     FormsModule,
     NzInputDirective,
     RectangleDrawerComponent,
-    RectangleDrawerTestComponent
   ],
   templateUrl: './pdf-viewer.html',
   styleUrl: './pdf-viewer.css'
@@ -58,10 +57,6 @@ export class PdfViewer {
       this.outRes += '未找到 canvas 元素';
     }
   }
-
-
-
-
   scrollTo(){
     this.page = this.pageInput;
   }

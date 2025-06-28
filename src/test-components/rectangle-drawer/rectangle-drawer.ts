@@ -1,7 +1,8 @@
 import {Component, ElementRef, HostListener, Input, ViewChild} from '@angular/core';
 import {NzButtonComponent} from 'ng-zorro-antd/button';
 import {ScrollViewer} from '../../ui';
-import {Rectangle, ResizeHandle} from '../../components/rectangle-drawer/rectangle';
+import {Rectangle, ResizeHandle} from '../../models';
+import {RectService} from '../../services';
 
 @Component({
   selector: 'app-rectangle-drawer-test',
@@ -15,11 +16,16 @@ import {Rectangle, ResizeHandle} from '../../components/rectangle-drawer/rectang
 export class RectangleDrawerTestComponent {
   rectangles: Rectangle[] = [];
   selectedRectId: number | null = null;
+  constructor(private rectService: RectService) {
 
+  }
+  // 控制组件本身的宽度
   @Input()
   width: string = '900px';
+  //控制组件本身的高度
   @Input()
   height: string = '900px';
+
   private drawing = false;
   private startX = 0;
   private startY = 0;
@@ -204,7 +210,7 @@ export class RectangleDrawerTestComponent {
     if(mouseY<=0){
       mouseY = Math.max(mouseY, 0);
     }
-    let handleResult = this.handleLimits(mouseX, mouseY,mx,my);
+    let handleResult = this.rectService.handleLimits(mouseX, mouseY,mx,my,this.resizeHandle);
     mouseX = handleResult[0];// 优化输入
     mouseY = handleResult[1];
     this.viewMouseX = mouseX;
@@ -283,38 +289,14 @@ export class RectangleDrawerTestComponent {
   clearSelectMode(){
     this.selectedRectId = null;
   }
-
-  private handleLimits(mouseX: number, mouseY: number,mx:number,my: number) {
-    switch (this.resizeHandle) {
-      case 'n':// north
-        mouseY = Math.max(0, mouseY);
-        break;
-      case 'ne'://north east
-        mouseX = Math.min(mx, mouseX);
-        mouseY = Math.max(0, mouseY);
-        break;
-      case 'e'://east
-        mouseX = Math.min(mx, mouseX);
-        break;
-      case 'se'://south east
-        mouseX = Math.min(mx, mouseX);
-        mouseY = Math.min(my, mouseY);
-        break;
-      case 's'://south
-        mouseY = Math.min(my, mouseY);
-        break;
-      case 'sw'://south west
-        mouseX = Math.max(0, mouseX);
-        mouseY = Math.max(0, mouseY);
-        break;
-      case 'w'://west
-        mouseX = Math.max(0, mouseX);
-        break;
-      case 'nw'://north west
-        mouseX = Math.max(0, mouseX);
-        mouseY = Math.max(0, mouseY);
-        break;
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Delete') {
+      if(this.selectedRectId !== null) {
+        let index = this.rectangles.findIndex(r => r.id === this.selectedRectId);
+        this.rectangles.splice(index, 1);
+      }
     }
-    return [mouseX, mouseY];
   }
+
 }

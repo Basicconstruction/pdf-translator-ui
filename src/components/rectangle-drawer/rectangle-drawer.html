@@ -1,7 +1,7 @@
 <div #parent
      [style.width]="width"
      [style.height]="height"
-     class="drawing-area m-2"
+     class="drawing-area"
      (mousedown)="startDrawing($event)"
      (mousemove)="drawingRect($event)"
      (mouseup)="endDrawing($event)"
@@ -25,8 +25,4 @@
     </div>
   }
 
-</div>
-<div class="m-2">
-  <button class="" nz-button (click)="deleteSelected()" [disabled]="(selectedRectId===null)">删除选中矩形</button>
-  <button class="mx-2" nz-button (click)="clearSelectMode()" [disabled]="(selectedRectId===null)">清除选中状态</button>
 </div>

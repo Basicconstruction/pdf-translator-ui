@@ -1,15 +1,17 @@
-import {NgModule, provideBrowserGlobalErrorListeners} from '@angular/core';
-import {BrowserModule} from '@angular/platform-browser';
+import {NgModule} from '@angular/core';
 import {DrawRoutingModule} from './draw-routing-module';
 import { Draw } from './draw';
+import {CommonModule} from '@angular/common';
+import {RouterOutlet} from '@angular/router';
 
 @NgModule({
   declarations: [
-
     Draw
   ],
   imports: [
-    DrawRoutingModule
+    DrawRoutingModule,
+    CommonModule,
+    RouterOutlet
   ],
   providers: [
   ],

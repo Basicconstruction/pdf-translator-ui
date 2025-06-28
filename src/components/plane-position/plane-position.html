@@ -1,0 +1,74 @@
+<div class="d-flex flex-row">
+  <div [style.width]="pdfViewerWidth" style="position: relative">
+    @if(pdfViewerVisible){
+      <ngx-extended-pdf-viewer
+        #pdf_container
+        [(src)]="pdfSrc"
+        [base64Src]="base64Src"
+        [(page)]="page"
+        (pagesLoaded)="onPdfLoad()"
+        [enableDragAndDrop]="true"
+        [height]="pdfViewerHeight"
+        [showToolbar]="false"
+        [spread]="spreadMode"
+        [zoom]="zoom"
+        class=""
+        pageViewMode="single"
+        style="opacity: 0.5;z-index: 1000"
+
+      >
+      </ngx-extended-pdf-viewer>
+    }
+    <div class="overlay-component"
+         [style.top.px]="offsetTop"
+         [style.left.px]="offsetLeft"
+         style="
+            position: absolute;
+            z-index: 2000;">
+      @if(rectVisible){
+        <app-rectangle-drawer
+          [width]="rectPainterWidth"
+          [height]="rectPainterHeight">
+        </app-rectangle-drawer>
+      }
+    </div>
+  </div>
+  <div class="p-2">
+    <nz-card>
+      <input type="file" (change)="setPdfFile($event)">
+    </nz-card>
+    <div class="my-1">
+      高度
+      <nz-select [(ngModel)]="inputHeight" (ngModelChange)="inputHeightChange()">
+        @for(height of availableHeights; track height){
+          <nz-option [nzLabel]="height" [nzValue]="height"></nz-option>
+        }
+
+      </nz-select>
+    </div>
+    <div class="my-1">
+      宽度
+      <nz-select [(ngModel)]="inputWidth" (ngModelChange)="inputWidthChange()">
+        @for(width of availableWidths; track width){
+          <nz-option [nzLabel]="width" [nzValue]="width"></nz-option>
+        }
+
+      </nz-select>
+    </div>
+    <div>
+      <nz-input-number [(ngModel)]="pageInput" class="mx-2">
+
+      </nz-input-number>
+      <button (click)="scrollTo()" nz-button>
+        跳转
+      </button>
+    </div>
+    <div class="my-2 d-flex flex-row">
+      <input [(ngModel)]="zoomInput" class="mx-2" nz-input type="text"/>
+      <button (click)="zoomTo()" nz-button>
+        放缩
+      </button>
+    </div>
+    <button class="mx-2" (click)="tackle()" nz-button>处理</button>
+  </div>
+</div>
