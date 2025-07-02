@@ -5,7 +5,7 @@ const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'pdf'
+    redirectTo: 'plane-position'
   },
   {
     path: 'pdf',

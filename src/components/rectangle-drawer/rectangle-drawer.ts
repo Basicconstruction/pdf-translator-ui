@@ -10,6 +10,7 @@ import {RectService} from '../../services';
   styleUrls: ['./rectangle-drawer.css']
 })
 export class RectangleDrawerComponent {
+
   rectangles: Rectangle[] = [];
   selectedRectId: number | null = null;
   constructor(private rectService: RectService) {
@@ -17,9 +18,10 @@ export class RectangleDrawerComponent {
   }
 
   @Input()
-  width: string = '900px';
+  width: number = 900;
   @Input()
-  height: string = '900px';
+  height: number = 900;
+
   private drawing = false;
   private startX = 0;
   private startY = 0;
@@ -53,6 +55,28 @@ export class RectangleDrawerComponent {
   }
   get _pe(){
     return this._pa!.nativeElement as HTMLElement
+  }
+  canvasWidth: number = 0;
+  canvasHeight: number = 0;
+  importRectangles(rects: Rectangle[], canvasWidth: number, canvasHeight: number){
+    this.rectangles = rects.map(rect => ({
+      id: rect.id,
+      x: rect.x,
+      y: rect.y,
+      width: rect.width,
+      height: rect.height
+    }));
+    this.canvasWidth = canvasWidth;
+    this.canvasHeight = canvasHeight;
+  }
+  exportRectangles(): Rectangle[] {
+    return this.rectangles.map(rect => ({
+      id: rect.id,
+      x: rect.x,
+      y: rect.y,
+      width: rect.width,
+      height: rect.height
+    }))
   }
   // 鼠标移动更新矩形大小
   drawingRect(event: MouseEvent) {
@@ -266,16 +290,6 @@ export class RectangleDrawerComponent {
     rect.width = w;
     rect.height = h;
 
-  }
-
-  // 删除选中矩形
-  deleteSelected() {
-    if (this.selectedRectId === null) return;
-    this.rectangles = this.rectangles.filter(r => r.id !== this.selectedRectId);
-    this.selectedRectId = null;
-  }
-  clearSelectMode(){
-    this.selectedRectId = null;
   }
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {

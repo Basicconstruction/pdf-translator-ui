@@ -1,0 +1,16 @@
+<div #parent
+     [style.width.px]="viewWidth"
+     [style.height.px]="viewHeight"
+     class="drawing-area"
+>
+  @for(rect of rectangles;track rect){
+    <div
+      class="rectangle"
+      [style.left.px]="rect.x"
+      [style.top.px]="rect.y"
+      [style.width.px]="rect.width"
+      [style.height.px]="rect.height">
+    </div>
+  }
+
+</div>

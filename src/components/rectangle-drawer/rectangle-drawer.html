@@ -1,6 +1,6 @@
 <div #parent
-     [style.width]="width"
-     [style.height]="height"
+     [style.width.px]="width"
+     [style.height.px]="height"
      class="drawing-area"
      (mousedown)="startDrawing($event)"
      (mousemove)="drawingRect($event)"

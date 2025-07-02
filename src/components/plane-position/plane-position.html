@@ -1,5 +1,5 @@
 <div class="d-flex flex-row">
-  <div [style.width]="pdfViewerWidth" style="position: relative">
+  <div [style.width.px]="pdfViewerWidth" style="position: relative">
     @if(pdfViewerVisible){
       <ngx-extended-pdf-viewer
         #pdf_container
@@ -50,7 +50,7 @@
       宽度
       <nz-select [(ngModel)]="inputWidth" (ngModelChange)="inputWidthChange()">
         @for(width of availableWidths; track width){
-          <nz-option [nzLabel]="width" [nzValue]="width"></nz-option>
+          <nz-option [nzLabel]="width+'px'" [nzValue]="width"></nz-option>
         }
 
       </nz-select>
@@ -70,5 +70,9 @@
       </button>
     </div>
     <button class="mx-2" (click)="tackle()" nz-button>处理</button>
+    <nz-card class="my-2">
+      <button class="m-2" nz-button [disabled]="page<=1" (click)="lastPage()">上一页</button>
+      <button class="m-2" nz-button [disabled]="nextAvailable()" (click)="nextPage()">下一页</button>
+    </nz-card>
   </div>
 </div>
