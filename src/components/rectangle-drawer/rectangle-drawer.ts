@@ -1,5 +1,5 @@
 import {Component, ElementRef, HostListener, Input, SimpleChanges, ViewChild} from '@angular/core';
-import {Rectangle, ResizeHandle} from '../../models';
+import {Rectangle, ResizeHandle, Workspace} from '../../models';
 import {RectService} from '../../services';
 
 @Component({
@@ -56,26 +56,32 @@ export class RectangleDrawerComponent {
   get _pe(){
     return this._pa!.nativeElement as HTMLElement
   }
-  canvasWidth: number = 0;
-  canvasHeight: number = 0;
-  importRectangles(rects: Rectangle[], canvasWidth: number, canvasHeight: number){
+  // canvasWidth: number = 0;
+  // canvasHeight: number = 0;
+  importRectangles(workspace: Workspace,index:number){
+    let rects = workspace.pages[index];
+    let xrate = this.width / workspace.canvasWidth;
+    let yrate = this.height / workspace.canvasHeight;
     this.rectangles = rects.map(rect => ({
       id: rect.id,
-      x: rect.x,
-      y: rect.y,
-      width: rect.width,
-      height: rect.height
+      x: rect.x * xrate,
+      y: rect.y  * yrate,
+      width: rect.width * xrate,
+      height: rect.height  * yrate,
     }));
-    this.canvasWidth = canvasWidth;
-    this.canvasHeight = canvasHeight;
+    // this.rectangles
+    // this.canvasWidth = canvasWidth;
+    // this.canvasHeight = canvasHeight;
   }
-  exportRectangles(): Rectangle[] {
+  exportRectangles(workspace: Workspace): Rectangle[] {
+    let xrate = this.width / workspace.canvasWidth;
+    let yrate = this.height / workspace.canvasHeight;
     return this.rectangles.map(rect => ({
       id: rect.id,
-      x: rect.x,
-      y: rect.y,
-      width: rect.width,
-      height: rect.height
+      x: rect.x / xrate,
+      y: rect.y / yrate,
+      width: rect.width / xrate,
+      height: rect.height / yrate,
     }))
   }
   // 鼠标移动更新矩形大小

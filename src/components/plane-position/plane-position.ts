@@ -48,20 +48,22 @@ export class PlanePosition {
   zoomInput: string = 'page-fit';
   inputHeight: string = "900px";
   inputHeightChange() {
-    this.pdfViewerVisible = false;
+    this.storageToWorksapce(this.page-1)
+    console.log(this.workspace)
     this.pdfViewerHeight = this.inputHeight;
-    setTimeout(()=>{
-      const rootEl: HTMLElement = this.pdfViewRef!.nativeElement;
-      this.rectPainterHeight = rootEl.getBoundingClientRect().height;
-    },200)
+    const rootEl: HTMLElement = this.pdfViewRef!.nativeElement;
+    this.rectPainterHeight = rootEl.getBoundingClientRect().height;
+    this.pdfViewerVisible = false;
 
     setTimeout(() => {
       this.pdfViewerVisible = true;
       this.pdfSrc = "";
       this.base64Src = this.pre64Src;
-    },100)
+      console.log(this.workspace)
+    },1)
   }
   inputWidthChange() {
+    this.storageToWorksapce(this.page-1)
     this.pdfViewerVisible = false;
     this.pdfViewerWidth = this.inputWidth;
     this.rectPainterWidth = this.inputWidth;
@@ -69,7 +71,7 @@ export class PlanePosition {
       this.pdfViewerVisible = true;
       this.pdfSrc = "";
       this.base64Src = this.pre64Src;
-    },100)
+    },1)
   }
   pdfViewerWidth: number = 900;
   pdfViewerHeight: string = "900px";
@@ -90,16 +92,20 @@ export class PlanePosition {
     this.tackle();
     this.rectPainterWidth = this.cWidth;
     this.rectPainterHeight = this.cHeight;
-    let count = this.pdfService.numberOfPages();
-    this.workspace = {
-      pageCount: count,
-      canvasWidth: this.cWidth,
-      canvasHeight: this.cHeight,
-      pages: this.fillRects(count),
+    if(this.workspace?.pdfIdentifier!==this.identifier){
+      let count = this.pdfService.numberOfPages();
+      this.workspace = {
+        pageCount: count,
+        canvasWidth: this.cWidth,//base
+        canvasHeight: this.cHeight,//base
+        pages: this.fillRects(count),
+        pdfIdentifier: this.identifier
+      }
     }
-    setTimeout(() => {
-      this.rectVisible = true;
+    this.rectVisible = true;
 
+    setTimeout(() => {
+      this.loadFromWorkspace(this.page-1)
     },100)
   }
   fillRects(count: number) {
@@ -156,13 +162,15 @@ export class PlanePosition {
 
     // 例如读取文件内容
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
        this.preSrc = reader.result as ArrayBuffer | Blob;
        this.pre64Src = this.bs64.arrayBufferToBase64(reader.result as ArrayBuffer);
        this.pdfSrc = this.preSrc;
+       this.identifier = await this.bs64.hashStringSHA256(this.pre64Src);
     };
     reader.readAsArrayBuffer(file);
   }
+  identifier: string|undefined = undefined;
   preSrc: ArrayBuffer | Blob | undefined;
   pre64Src: string | undefined;
   availableHeights: string[] = [
@@ -172,26 +180,28 @@ export class PlanePosition {
   availableWidths: number[] = [
     900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2100,2200,2300
   ]
-  storageToWorksapce(stoPage: number){
+  storageToWorksapce(stoIndex: number){
     if(!this.workspace) {
       return;
     }
-    // console.log(this.rectangleDrawer);
-    this.workspace.pages[stoPage-1] = this.rectangleDrawer!.exportRectangles();
+    this.workspace.pages[stoIndex] = this.rectangleDrawer!.exportRectangles(this.workspace);
 
-    console.log(`存入 ${stoPage-1}`);
-    console.log(this.workspace.pages[stoPage-1]);
+    // console.log(`存入 ${stoIndex}`);
+    // console.log(this.workspace.pages[stoIndex]);
+    // console.log(this.workspace)
 
   }
-  loadFromWorkspace(loadPage: number){
-    let rects = this.workspace!.pages[loadPage];
-    console.log(`拿出 ${loadPage}`);
-    this.rectangleDrawer?.importRectangles(rects,this.workspace!.canvasWidth,this.workspace!.canvasHeight);
+  loadFromWorkspace(loadIndex: number){
+    // let rects = this.workspace!.pages[loadIndex];
+    console.log(`拿出 ${loadIndex}`);
+    // console.log(this.workspace)
+    // console.log(rects)
+    this.rectangleDrawer?.importRectangles(this.workspace!,loadIndex);
   }
 
   lastPage() {
     if(!this.page) return;
-    this.storageToWorksapce(this.page);
+    this.storageToWorksapce(this.page-1);
     if(this.page===1) return;
     this.loadFromWorkspace(this.page-2);
     this.page--;
@@ -199,7 +209,7 @@ export class PlanePosition {
 
   nextPage() {
     if(!this.page) return;
-    this.storageToWorksapce(this.page);
+    this.storageToWorksapce(this.page-1);
     if(this.page>=this.workspace!.pageCount){
       return;
     }
