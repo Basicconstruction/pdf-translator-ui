@@ -63,16 +63,34 @@
         跳转
       </button>
     </div>
-    <div class="my-2 d-flex flex-row">
-      <input [(ngModel)]="zoomInput" class="mx-2" nz-input type="text"/>
-      <button (click)="zoomTo()" nz-button>
-        放缩
-      </button>
-    </div>
-    <button class="mx-2" (click)="tackle()" nz-button>处理</button>
-    <nz-card class="my-2">
+<!--    <div class="my-2 d-flex flex-row">-->
+<!--      <input [(ngModel)]="zoomInput" class="mx-2" nz-input type="text"/>-->
+<!--      <button (click)="zoomTo()" nz-button>-->
+<!--        放缩-->
+<!--      </button>-->
+<!--    </div>-->
+    <button class="mx-2 my-1" (click)="tackle()" nz-button>处理</button>
+    <div>
       <button class="m-2" nz-button [disabled]="page<=1" (click)="lastPage()">上一页</button>
       <button class="m-2" nz-button [disabled]="nextAvailable()" (click)="nextPage()">下一页</button>
-    </nz-card>
+    </div>
+    <div>
+      <button class="m-2" nz-button (click)="viewPdfPages()">查看</button>
+      <button class="m-2" nz-button (click)="exportPdfPages()">导出</button>
+    </div>
+
   </div>
 </div>
+@if(isModalOpen){
+  <div class="modal-backdrop"  (click)="closeModal()"></div>
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Workspace JSON</h3>
+      <button class="close-btn" (click)="closeModal()">×</button>
+    </div>
+    <div class="modal-content">
+      <pre [innerHTML]="highlightedJson"></pre>
+    </div>
+  </div>
+}
+

@@ -9,11 +9,13 @@ import {
 import {NzInputNumberComponent} from 'ng-zorro-antd/input-number';
 import {NzButtonComponent} from 'ng-zorro-antd/button';
 import {FormsModule} from '@angular/forms';
-import {NzInputDirective} from 'ng-zorro-antd/input';
 import {RectangleDrawerComponent} from '../rectangle-drawer/rectangle-drawer';
 import {NzSelectModule} from 'ng-zorro-antd/select';
 import {Bs64Handler} from '../../services';
 import {Rectangle, Workspace} from '../../models';
+
+import * as pdfjsLib from 'pdfjs-dist';
+import {getDocument} from 'pdfjs-dist';
 
 @Component({
   selector: 'app-pdf-viewer',
@@ -24,7 +26,6 @@ import {Rectangle, Workspace} from '../../models';
     NzInputNumberComponent,
     NzButtonComponent,
     FormsModule,
-    NzInputDirective,
     RectangleDrawerComponent,
     NzSelectModule,
     FormsModule,
@@ -35,6 +36,10 @@ import {Rectangle, Workspace} from '../../models';
 export class PlanePosition {
   constructor(private bs64: Bs64Handler, private pdfService: NgxExtendedPdfViewerService) {
     pdfDefaultOptions.assetsFolder = 'bleeding-edge';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+      'pdfjs-dist/build/pdf.worker.mjs',
+      import.meta.url
+    ).toString();
   }
   workspace: Workspace | undefined;
   pdfSrc: string | ArrayBuffer | Blob | Uint8Array | URL | {
@@ -48,7 +53,7 @@ export class PlanePosition {
   zoomInput: string = 'page-fit';
   inputHeight: string = "900px";
   inputHeightChange() {
-    this.storageToWorksapce(this.page-1)
+    this.storageToWorkspace(this.page-1)
     console.log(this.workspace)
     this.pdfViewerHeight = this.inputHeight;
     const rootEl: HTMLElement = this.pdfViewRef!.nativeElement;
@@ -63,7 +68,7 @@ export class PlanePosition {
     },1)
   }
   inputWidthChange() {
-    this.storageToWorksapce(this.page-1)
+    this.storageToWorkspace(this.page-1)
     this.pdfViewerVisible = false;
     this.pdfViewerWidth = this.inputWidth;
     this.rectPainterWidth = this.inputWidth;
@@ -150,7 +155,7 @@ export class PlanePosition {
     this.zoom = this.zoomInput;
   }
 
-  setPdfFile(event: Event) {
+  async setPdfFile(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) {
       console.log('未选择文件');
@@ -158,6 +163,17 @@ export class PlanePosition {
     }
 
     const file = input.files[0];
+    //读取pdf每一页的宽高 开始
+    const arrayBuffer = await file.arrayBuffer();
+    const loadingTask = getDocument({ data: arrayBuffer });
+    const pdfDoc = await loadingTask.promise;
+
+    for (let i = 1; i <= pdfDoc.numPages; i++) {
+      const page = await pdfDoc.getPage(i);
+      const viewport = page.getViewport({ scale: 1 });
+      console.log(`Page ${i}: width=${viewport.width} px, height=${viewport.height} px`);
+    }
+    //读取pdf每一页的宽高 结束
     console.log('选择的文件名:', file.name);
 
     // 例如读取文件内容
@@ -180,28 +196,20 @@ export class PlanePosition {
   availableWidths: number[] = [
     900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2100,2200,2300
   ]
-  storageToWorksapce(stoIndex: number){
+  storageToWorkspace(stoIndex: number){
     if(!this.workspace) {
       return;
     }
     this.workspace.pages[stoIndex] = this.rectangleDrawer!.exportRectangles(this.workspace);
-
-    // console.log(`存入 ${stoIndex}`);
-    // console.log(this.workspace.pages[stoIndex]);
-    // console.log(this.workspace)
-
   }
   loadFromWorkspace(loadIndex: number){
-    // let rects = this.workspace!.pages[loadIndex];
     console.log(`拿出 ${loadIndex}`);
-    // console.log(this.workspace)
-    // console.log(rects)
     this.rectangleDrawer?.importRectangles(this.workspace!,loadIndex);
   }
 
   lastPage() {
     if(!this.page) return;
-    this.storageToWorksapce(this.page-1);
+    this.storageToWorkspace(this.page-1);
     if(this.page===1) return;
     this.loadFromWorkspace(this.page-2);
     this.page--;
@@ -209,7 +217,7 @@ export class PlanePosition {
 
   nextPage() {
     if(!this.page) return;
-    this.storageToWorksapce(this.page-1);
+    this.storageToWorkspace(this.page-1);
     if(this.page>=this.workspace!.pageCount){
       return;
     }
@@ -222,5 +230,46 @@ export class PlanePosition {
       return this.page>=this.workspace!.pageCount
     }
     return true;
+  }
+  isModalOpen = false;
+  highlightedJson = '';
+  viewPdfPages() {
+    this.storageToWorkspace(this.page-1);
+    const jsonStr = JSON.stringify(this.workspace, null, 2);
+    this.highlightedJson = this.syntaxHighlight(jsonStr);
+    this.isModalOpen = true;
+  }
+  closeModal() {
+    this.isModalOpen = false;
+  }
+  syntaxHighlight(json: string): string {
+    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\\s*:)?|\b(true|false|null)\b|-?\d+(\.\d*)?(e[+\-]?\d+)?)/g, (match) => {
+      let cls = 'number';
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) {
+          cls = 'key';
+        } else {
+          cls = 'string';
+        }
+      } else if (/true|false/.test(match)) {
+        cls = 'boolean';
+      } else if (/null/.test(match)) {
+        cls = 'null';
+      }
+      return `<span class="${cls}">${match}</span>`;
+    });
+  }
+  exportPdfPages() {
+    const jsonStr = JSON.stringify(this.workspace, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (this.workspace!.pdfIdentifier || 'workspace') + '.json';
+    a.click();
+
+    window.URL.revokeObjectURL(url);
   }
 }
