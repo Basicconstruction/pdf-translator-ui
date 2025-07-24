@@ -1,4 +1,4 @@
-import {Component, ElementRef, ViewChild, WritableSignal} from '@angular/core';
+import {Component, ElementRef, HostListener, ViewChild, WritableSignal} from '@angular/core';
 import {NzCardModule} from 'ng-zorro-antd/card';
 import {
   NgxExtendedPdfViewerComponent,
@@ -12,10 +12,11 @@ import {FormsModule} from '@angular/forms';
 import {RectangleDrawerComponent} from '../rectangle-drawer/rectangle-drawer';
 import {NzSelectModule} from 'ng-zorro-antd/select';
 import {Bs64Handler} from '../../services';
-import {Rectangle, Workspace} from '../../models';
+import {Dimension, Page, Rectangle, Workspace} from '../../models';
 
 import * as pdfjsLib from 'pdfjs-dist';
 import {getDocument} from 'pdfjs-dist';
+import {LayoutService} from '../../services/layout.service';
 
 @Component({
   selector: 'app-pdf-viewer',
@@ -34,7 +35,8 @@ import {getDocument} from 'pdfjs-dist';
   styleUrl: './plane-position.css'
 })
 export class PlanePosition {
-  constructor(private bs64: Bs64Handler, private pdfService: NgxExtendedPdfViewerService) {
+  constructor(private bs64: Bs64Handler, private pdfService: NgxExtendedPdfViewerService,
+              private layoutService: LayoutService,) {
     pdfDefaultOptions.assetsFolder = 'bleeding-edge';
     pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
       'pdfjs-dist/build/pdf.worker.mjs',
@@ -78,6 +80,10 @@ export class PlanePosition {
       this.base64Src = this.pre64Src;
     },1)
   }
+  @HostListener('window:resize', ['$event'])
+  onWindowResize(event: Event) {
+
+  }
   pdfViewerWidth: number = 900;
   pdfViewerHeight: string = "900px";
   rectPainterWidth: number = 900;
@@ -101,8 +107,7 @@ export class PlanePosition {
       let count = this.pdfService.numberOfPages();
       this.workspace = {
         pageCount: count,
-        canvasWidth: this.cWidth,//base
-        canvasHeight: this.cHeight,//base
+        dimensions: this.uniqueDimensions!,
         pages: this.fillRects(count),
         pdfIdentifier: this.identifier
       }
@@ -114,10 +119,14 @@ export class PlanePosition {
     },100)
   }
   fillRects(count: number) {
-    let result: Rectangle[][] = [];
+    let result: Page[] = [];
     for(let i = 0; i < count; i++) {
       let rect: Rectangle[] = [];
-      result.push(rect);
+      let dimension = this.dimensions![i];
+      result.push({
+        index: this.uniqueDimensions!.findIndex(d=>d.width===dimension.width && d.height===dimension.height),
+        rects: rect
+      });
     }
     return result;
   }
@@ -154,7 +163,8 @@ export class PlanePosition {
   zoomTo(){
     this.zoom = this.zoomInput;
   }
-
+  dimensions: Dimension[] | undefined;
+  uniqueDimensions: Dimension[] | undefined;
   async setPdfFile(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) {
@@ -167,12 +177,22 @@ export class PlanePosition {
     const arrayBuffer = await file.arrayBuffer();
     const loadingTask = getDocument({ data: arrayBuffer });
     const pdfDoc = await loadingTask.promise;
-
+    let dimensions: Dimension[] = [];
     for (let i = 1; i <= pdfDoc.numPages; i++) {
       const page = await pdfDoc.getPage(i);
       const viewport = page.getViewport({ scale: 1 });
-      console.log(`Page ${i}: width=${viewport.width} px, height=${viewport.height} px`);
+      dimensions.push({
+        width: viewport.width,
+        height: viewport.height,
+      });
     }
+
+    let uniqueDimensions: Dimension[] = this.layoutService.getLayout(dimensions);
+    for (let i = 0; i < uniqueDimensions.length; ++i) {
+      console.log("unique ",uniqueDimensions[i]);
+    }
+    this.dimensions = dimensions;
+    this.uniqueDimensions = uniqueDimensions;
     //读取pdf每一页的宽高 结束
     console.log('选择的文件名:', file.name);
 
@@ -200,7 +220,7 @@ export class PlanePosition {
     if(!this.workspace) {
       return;
     }
-    this.workspace.pages[stoIndex] = this.rectangleDrawer!.exportRectangles(this.workspace);
+    this.workspace.pages[stoIndex].rects = this.rectangleDrawer!.exportRectangles(this.workspace);
   }
   loadFromWorkspace(loadIndex: number){
     console.log(`拿出 ${loadIndex}`);

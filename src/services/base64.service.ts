@@ -26,6 +26,11 @@ export class Bs64Handler{
   async hashStringSHA256(str: string): Promise<string> {
     const encoder = new TextEncoder();
     const data = encoder.encode(str);
+    // http环境测试用
+    if(crypto===undefined || crypto.subtle===undefined){
+      return str.substring(0,10);
+    }
+    // htttps 下可用
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     // 转成16进制字符串
     const hashArray = Array.from(new Uint8Array(hashBuffer));

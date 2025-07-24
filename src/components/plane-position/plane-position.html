@@ -1,5 +1,5 @@
 <div class="d-flex flex-row">
-  <div [style.width.px]="pdfViewerWidth" style="position: relative">
+  <div [style.width.px]="pdfViewerWidth" [style.min-width.px]="pdfViewerWidth" [style.max-width.px]="pdfViewerWidth" style="position: relative">
     @if(pdfViewerVisible){
       <ngx-extended-pdf-viewer
         #pdf_container
@@ -19,7 +19,7 @@
       >
       </ngx-extended-pdf-viewer>
     }
-    <div class="overlay-component"
+    <div class="overlay-component flex-grow-1"
          [style.top.px]="offsetTop"
          [style.left.px]="offsetLeft"
          style="

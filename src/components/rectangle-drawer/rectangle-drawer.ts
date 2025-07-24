@@ -56,26 +56,24 @@ export class RectangleDrawerComponent {
   get _pe(){
     return this._pa!.nativeElement as HTMLElement
   }
-  // canvasWidth: number = 0;
-  // canvasHeight: number = 0;
+  pageIndex: number | undefined = 0;
   importRectangles(workspace: Workspace,index:number){
-    let rects = workspace.pages[index];
-    let xrate = this.width / workspace.canvasWidth;
-    let yrate = this.height / workspace.canvasHeight;
-    this.rectangles = rects.map(rect => ({
+    this.pageIndex = index;
+    let dimension = workspace.dimensions[workspace.pages[this.pageIndex!].index];
+    let xrate = this.width / dimension.width;
+    let yrate = this.height / dimension.height;
+    this.rectangles = workspace.pages[index].rects.map(rect => ({
       id: rect.id,
       x: rect.x * xrate,
       y: rect.y  * yrate,
       width: rect.width * xrate,
       height: rect.height  * yrate,
     }));
-    // this.rectangles
-    // this.canvasWidth = canvasWidth;
-    // this.canvasHeight = canvasHeight;
   }
   exportRectangles(workspace: Workspace): Rectangle[] {
-    let xrate = this.width / workspace.canvasWidth;
-    let yrate = this.height / workspace.canvasHeight;
+    let dimension = workspace.dimensions[workspace.pages[this.pageIndex!].index];
+    let xrate = this.width / dimension.width;
+    let yrate = this.height / dimension.height;
     return this.rectangles.map(rect => ({
       id: rect.id,
       x: rect.x / xrate,
